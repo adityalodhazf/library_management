@@ -1,0 +1,44 @@
+name: library
+
+services:
+  library_server:
+    image: library_server
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "50051:50051"
+    networks:
+      - library_network
+  
+  postgres:
+    image: postgres:18
+    container_name: postgres-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: library_mgmt
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password12345
+
+    ports:
+      - "5432:5432"
+    
+    networks:
+      - library_network
+
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d library_mgmt"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  library_network:
+    driver: bridge

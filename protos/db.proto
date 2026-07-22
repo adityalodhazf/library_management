@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package mydb;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+
+//-------------service declaration-------------
+service LibraryManagement {
+    rpc create_tables (google.protobuf.Empty) returns (SuccessMessage);
+
+    // insert methods
+    rpc insert_books (Books) returns (SuccessMessage);
+    rpc insert_books_bulk (CsvRequest) returns (SuccessMessage);
+    rpc insert_authors (Authors) returns (SuccessMessage);
+    rpc insert_members (Members) returns (SuccessMessage);
+    rpc insert_branch_details (LibraryBranch) returns (SuccessMessage);
+    rpc insert_transaction (Transaction) returns (SuccessMessage);
+
+    // fetch methods
+    rpc fetch_authors (Author) returns (Authors);
+    rpc fetch_members (Member) returns (Members);
+    rpc fetch_books (FetchBooksPayload) returns (FetchBooksPayload);
+    rpc fetch_transactions (Transaction) returns (Transactions);
+
+    // update methods
+    rpc update_member (Member) returns (SuccessMessage);
+    rpc update_book (Book) returns (SuccessMessage);
+    rpc update_transaction (Transaction) returns (SuccessMessage);
+
+    // delete methods
+    rpc delete_member (Member) returns (SuccessMessage);
+    rpc delete_book (Book) returns (SuccessMessage);
+    rpc delete_library_branch (LibraryBranch) returns (SuccessMessage);
+}
+
+
+//-------------messages-------------
+message SuccessMessage {
+    string message = 1;
+}
+
+message Author {
+    optional int32 author_id = 1;
+    optional string first_name = 2;
+    optional string last_name = 3;
+}
+
+message Authors {
+    repeated Author authors = 1;
+}
+
+message Book {
+    optional int32 book_id = 1;
+    optional string title = 2;
+    optional string isbn = 3;
+    optional string genere = 4;
+    optional string publisher = 5;
+    optional google.protobuf.Timestamp publication_date = 6;
+    optional int32 fine_per_day = 7;
+    optional Authors authors = 8;
+}
+
+message Books {
+    repeated Book books = 1;
+}
+
+message Book_Authors {
+    optional int32 book_id = 1;
+    optional int32 author_id = 2;
+}
+
+message Address {
+    optional string house_number = 1;
+    optional string address_line_1 = 2;
+    optional string address_line_2 = 3;
+    optional string city = 4;
+    optional string state = 5;
+    optional string pincode = 6;
+}
+
+message Member {
+    optional int32 member_id = 1;
+    optional int32 branch_id = 2;
+    optional string first_name = 3;
+    optional string last_name = 4;
+    optional string username = 5;
+    optional string password = 6;
+    optional Address address = 7;
+    optional string mobile_number = 8;
+    optional string email = 9;
+    optional google.protobuf.Timestamp joining_date = 10;
+    optional bool is_active = 11;
+}
+
+message Members {
+    repeated Member members = 1;
+}
+
+message CsvRequest {
+  optional string filename = 1;
+  optional bytes content = 2;
+}
+
+message LibraryBranch {
+    optional int32 branch_id = 1;
+    optional string branch_name = 2;
+    optional string address = 3;
+    optional string phone_number = 4;
+    optional string email = 5;
+    optional int32 employee_count = 6;
+    optional Book is_operational = 7;
+}
+
+message LibraryBranches {
+    repeated LibraryBranch library_branches = 1;
+}
+
+message Transaction {
+    optional int32 transaction_id = 1;
+    optional int32 book_id = 2;
+    optional int32 member_id = 3;
+    optional int32 issued_branch_id = 4;
+    optional int32 returned_branch_id = 5;
+    optional google.protobuf.Timestamp issue_date = 6;
+    optional google.protobuf.Timestamp return_date = 7;
+    optional bool is_returned = 8;
+    optional int32 fine = 9;
+}
+
+message Transactions {
+    repeated Transaction transactions = 1;
+}
+
+
+message FetchBooksPayload {
+    repeated Book books = 1;
+    repeated Author authors = 2;
+}
