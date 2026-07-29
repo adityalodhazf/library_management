@@ -69,6 +69,21 @@ class QueryBuilder():
             print("_build_fetch_members_query Exception: {repr(e)}")
             return None
 
+    def _build_insert_book_query(self, book:db_pb2.Book):
+        try:
+            query = f"""
+                INSERT INTO books (title, fine_per_day)
+                VALUES ('{book.title}', {book.fine_per_day})
+                ON CONFLICT (title)
+                DO UPDATE
+                SET title = EXCLUDED.title
+                RETURNING book_id;
+            """
+            return query
+        except Exception as e:
+            print(f"_build_insert_book_query exception: {repr(e)}")
+            return None
+
     def _build_insert_books_query(self, books:db_pb2.Books):
         try:
             lst = books.books
@@ -90,6 +105,28 @@ class QueryBuilder():
             return query
         except Exception as e:
             print(f"_build_insert_books_query exception: {repr(e)}")
+            return None
+
+    def _build_update_book_query(self, book:db_pb2.Book):
+        try:
+            query = f"""
+                UPDATE books
+                SET
+                    {", ".join(
+                            [
+                                f"{key} = {val}" if isinstance(val, int)
+                                else f"{key} = '{val}'"
+                                for key, val in MessageToDict(book, preserving_proto_field_name=True).items()
+                                if key != "book_id"
+                            ]
+                        )
+                    }
+                WHERE book_id = {book.book_id}
+                RETURNING book_id;
+            """
+            return query
+        except Exception as e:
+            print(f"_build_update_member_query Exception: {repr(e)}")
             return None
 
     def _build_insert_member_query(self, members: db_pb2.Members):
@@ -189,7 +226,9 @@ class QueryBuilder():
                             book_id,
                             member_id,
                             issued_branch_id,
-                            issue_date
+                            issue_date,
+                            return_date,
+                            fine
                         FROM transactions
                     """
             if transaction.ListFields():

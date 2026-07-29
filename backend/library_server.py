@@ -27,16 +27,16 @@ class LibraryManagementService(db_pb2_grpc.LibraryManagementServicer):
         
         return success_message
 
-    def insert_books(self, request, context):
-        print("insert_books reqeust made.")
-        print(request)
-
+    def insert_book(self, request, context):
+        print("insert_book reqeust made.")
+        print(f"server insert_book request = {request}")
         success_message = db_pb2.SuccessMessage()
         try:
-            success_message.message = "insert_books not implemented yet."
+            success_message.message = DB().insert_book(book=request)
+            # success_message.message = "insert_book not implemented yet."
         except Exception as e:
-            print(f"insert_books Exception: {repr(e)}")
-            success_message.message = "insert_books Exception."
+            print(f"server insert_book Exception: {repr(e)}")
+            success_message.message = "insert_book Exception."
         
         return success_message
 
@@ -116,12 +116,17 @@ class LibraryManagementService(db_pb2_grpc.LibraryManagementServicer):
         print(request)
         return DB().update_transaction(request)
 
+    def update_book(self, request, context):
+        print("server update_book called.")
+        print(request)
+        return DB().update_book(request)
 
 def serve():
     print("Strating Library Management Server")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     db_pb2_grpc.add_LibraryManagementServicer_to_server(LibraryManagementService(), server)
-    server.add_insecure_port("localhost:50051")
+    # server.add_insecure_port("localhost:50051")
+    server.add_insecure_port("[::]:50051")
     server.start()
     print("Library Management Server started on port 50051")
     server.wait_for_termination()

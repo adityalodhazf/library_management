@@ -11,7 +11,8 @@ service LibraryManagement {
     rpc create_tables (google.protobuf.Empty) returns (SuccessMessage);
 
     // insert methods
-    rpc insert_books (Books) returns (SuccessMessage);
+    rpc insert_book (Book) returns (SuccessMessage);
+    // rpc insert_books (Books) returns (SuccessMessage);
     rpc insert_books_bulk (CsvRequest) returns (SuccessMessage);
     rpc insert_authors (Authors) returns (SuccessMessage);
     rpc insert_members (Members) returns (SuccessMessage);

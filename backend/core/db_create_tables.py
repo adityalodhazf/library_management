@@ -155,7 +155,6 @@ class CreateDBTables():
                             returned_branch_id INTEGER,
                             issue_date TIMESTAMPTZ NOT NULL,
                             return_date TIMESTAMPTZ,
-                            is_returned BOOLEAN,
                             fine INTEGER DEFAULT 0,
 
                             CONSTRAINT fk_book

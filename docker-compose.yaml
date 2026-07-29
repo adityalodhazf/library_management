@@ -8,6 +8,8 @@ services:
       dockerfile: backend/Dockerfile
     ports:
       - "50051:50051"
+    environment:
+      DATABASE_URL: postgresql://admin:password12345@postgres:5432/library_mgmt
     networks:
       - library_network
   
