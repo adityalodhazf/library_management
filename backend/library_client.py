@@ -65,7 +65,7 @@ def create_tables(stub):
     print(success_message)
 
 
-def insert_books(stub):
+def insert_books_bulk(stub):
     print("insert books called.")
     with open("books.csv", "rb") as f:
         content = f.read()
@@ -94,6 +94,28 @@ def member_input():
         member.mobile_number = mobile_number
 
     return member
+
+
+def book_input():
+    title = input("Enter book title: ")
+    fine_per_day = input("Enter fine_per_day: ")
+    author_first_name = input("Author first name: ")
+    author_last_name = input("Author last name: ")
+    book = db_pb2.Book()
+    if title:
+        book.title = title
+    if fine_per_day:
+        book.fine_per_day = int(fine_per_day)
+    # author = db_pb2.Author()
+    author = book.authors.authors.add()
+    if author_first_name:
+        author.first_name = author_first_name
+    if author_last_name:
+        author.last_name = author_last_name
+    # book.authors = [author]
+    
+    return book
+
 
 def insert_member(stub):
     print("insert_member")
@@ -133,7 +155,7 @@ def update_member(stub):
 def fetch_books(stub):
     print("fetch_books called.")
     print("Enter deatils to search the book")
-    choice = int(input("(1) Search by Book title  (2) Search by Author - Enter choice (1/2): "))
+    choice = int(input("(1) Search by Book title  (2) Search by Author (3) Fetch all - Enter choice (1/2/3): "))
     fetch_book_payload = db_pb2.FetchBooksPayload()
     if choice == 1: # search by book name
         book_title = input("Enter book title: ")
@@ -158,6 +180,9 @@ def fetch_books(stub):
             print("No author details provided.")
             return
         fetch_book_payload.authors.extend([author])
+    elif choice == 3:
+        # fetch all books
+        pass
     else:
         print("fetch_books Invalid input option.")
         return
@@ -166,7 +191,17 @@ def fetch_books(stub):
     print(res)
 
 def update_book(stub):
-    pass
+    print("update_book called.")
+    book_id = input("Enter book id: ")
+    # result = stub.fetch_book_by_id(int(book_id))
+    # if not result.ListFields():
+    #     print("book not found.")
+    #     return
+    print("Enter values which you want to udpate. keep other inputs blank.")
+    book = book_input()
+    book.book_id = int(book_id)
+    result = stub.update_book(book) if book.ListFields() else "No data to update."
+    print(result)
 
 def transaction_input():
     try:
@@ -195,22 +230,25 @@ def insert_transaction(stub):
         print(f"insert_transaction Exception: {repr(e)}")
         return
 
+def insert_book(stub):
+    try:
+        book = book_input()
+        if book:
+            res = stub.insert_book(book)
+            print (res)
+    except Exception as e:
+        print(f"client insert_book Exception: {repr(e)}")
+        return
+
 def fetch_transaction(stub):
     try:
         member_id = input("Enter member_id: ")
         branch_id = input("Enter branch id: ")
-        # year = input("Enter year: ")
-        # month = input("Enter month: ")
-        # day = input("Enter day of the month: ")
         transaction = db_pb2.Transaction()
         if member_id:
             transaction.member_id = int(member_id)
         if branch_id:
             transaction.branch_id = int(branch_id)
-        # if year:
-        #     year = int(year)
-        #     month = int(month) if month else 1
-        #     day = int(day) if month and day else 1
         res = stub.fetch_transactions(transaction)
         print(res)
     except Exception as e:
@@ -237,7 +275,7 @@ def run():
     actions = {
         1: "Exit",
         2: "Create DB Tables",
-        3: "Insert book",
+        3: "Insert books bulk",
         4: "Insert author",
         5: "Fetch authors",
         6: "Update author",
@@ -248,13 +286,14 @@ def run():
         11: "Update book",
         12: "Insert transaction",
         13: "Fetch transaction",
-        14: "Update transaction"
+        14: "Update transaction",
+        15: "Insert books"
     }
 
     functions = {
         1: myexit,
         2: create_tables,
-        3: insert_books,
+        3: insert_books_bulk,
         4: insert_author,
         5: fetch_authors,
         6: update_author,
@@ -265,7 +304,8 @@ def run():
         11: update_book,
         12: insert_transaction,
         13: fetch_transaction,
-        14: update_transaction
+        14: update_transaction,
+        15: insert_book
     }
 
     print(actions)

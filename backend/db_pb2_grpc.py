@@ -6,7 +6,7 @@ import warnings
 import db_pb2 as db__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
-GRPC_GENERATED_VERSION = '1.82.1'
+GRPC_GENERATED_VERSION = '1.83.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -41,9 +41,9 @@ class LibraryManagementStub:
                 request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
                 response_deserializer=db__pb2.SuccessMessage.FromString,
                 _registered_method=True)
-        self.insert_books = channel.unary_unary(
-                '/mydb.LibraryManagement/insert_books',
-                request_serializer=db__pb2.Books.SerializeToString,
+        self.insert_book = channel.unary_unary(
+                '/mydb.LibraryManagement/insert_book',
+                request_serializer=db__pb2.Book.SerializeToString,
                 response_deserializer=db__pb2.SuccessMessage.FromString,
                 _registered_method=True)
         self.insert_books_bulk = channel.unary_unary(
@@ -133,7 +133,7 @@ class LibraryManagementServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def insert_books(self, request, context):
+    def insert_book(self, request, context):
         """insert methods
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -141,7 +141,8 @@ class LibraryManagementServicer:
         raise NotImplementedError('Method not implemented!')
 
     def insert_books_bulk(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """rpc insert_books (Books) returns (SuccessMessage);
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -241,9 +242,9 @@ def add_LibraryManagementServicer_to_server(servicer, server):
                     request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
                     response_serializer=db__pb2.SuccessMessage.SerializeToString,
             ),
-            'insert_books': grpc.unary_unary_rpc_method_handler(
-                    servicer.insert_books,
-                    request_deserializer=db__pb2.Books.FromString,
+            'insert_book': grpc.unary_unary_rpc_method_handler(
+                    servicer.insert_book,
+                    request_deserializer=db__pb2.Book.FromString,
                     response_serializer=db__pb2.SuccessMessage.SerializeToString,
             ),
             'insert_books_bulk': grpc.unary_unary_rpc_method_handler(
@@ -361,7 +362,7 @@ class LibraryManagement:
             _registered_method=True)
 
     @staticmethod
-    def insert_books(request,
+    def insert_book(request,
             target,
             options=(),
             channel_credentials=None,
@@ -374,8 +375,8 @@ class LibraryManagement:
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/mydb.LibraryManagement/insert_books',
-            db__pb2.Books.SerializeToString,
+            '/mydb.LibraryManagement/insert_book',
+            db__pb2.Book.SerializeToString,
             db__pb2.SuccessMessage.FromString,
             options,
             channel_credentials,

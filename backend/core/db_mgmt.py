@@ -141,6 +141,33 @@ class DB():
         except Exception as e:
             print(f"_build_book_record_object Exception: {repr(e)}")
 
+    def insert_book(self, book:db_pb2.Book):
+        print("DB() insert_book called")
+        try:
+            # insert book
+            book_ids = self._execute(qb()._build_insert_book_query(book=book)).scalars().all()
+
+            # insert author
+            authors = db_pb2.Authors()
+            #     authors = db_pb2.Author (
+            #         first_name = book.authors.first_name,
+            #         last_name = book.authors.last_name
+            #     )
+            # )
+            breakpoint()
+            # for book in book.books:
+            authors.authors.extend(book.authors.authors)
+            author_ids = self.insert_authors(authors).scalars().all()
+
+            # insert book_authors
+            res = self._execute(query=qb()._build_book_authors_query(book_ids, author_ids))
+
+            rows = res.fetchall()
+            if rows:
+                return "Book added successfully"
+        except Exception as e:
+            print(f"DB() insert_book Exception: {repr(e)}")
+
     def insert_books_bulk(self, content):
         try:
             # csv_content = content.decode('utf-8')
@@ -265,28 +292,49 @@ class DB():
             print(f"DB() _fetch_book_ids_from_book_authors_table Exception: {repr(e)}")
             return None
 
+    def _fetch_all_books(self, book_id:int = None):
+            print(f"DB() _fetch_book_ids_from_book_authors_table called.")
+            try:
+                query = f"SELECT book_id, title, genere FROM books"
+                if book_id:
+                    query += f""" WHERE book_id = {book_id}"""
+                query += ";"
+                return self._execute(query=query)
+            except Exception as e:
+                print(f"DB() _fetch_all_books Exception: {repr(e)}")
+                return None
+
     def fetch_books(self, fetch_books_payload:db_pb2.FetchBooksPayload):
         print("DB() fetch_books called.")
         print(fetch_books_payload)
         try:
+            books = []
+            authors = []
             # case 1: book name is provided
             if fetch_books_payload.books:
                 #   1. find book id
                 books = self._fetch_book_details_from_book_name(fetch_books_payload.books[0]).fetchall()
-                book_id = books[0].book_id
-                #   2. fetch author ids using book id from book_authors table
-                author_ids = [record[0] for record in self._fetch_author_id_from_book_authors_table(book_id=book_id).fetchall()]
-                #   3. fetch author names for the author_ids returned from book_authors
-                authors = self._fetch_authors_using_ids(author_ids=author_ids).fetchall()
+                if books:
+                    book_id = books[0].book_id
+                    #   2. fetch author ids using book id from book_authors table
+                    author_ids = [record[0] for record in self._fetch_author_id_from_book_authors_table(book_id=book_id).fetchall()]
+                    #   3. fetch author names for the author_ids returned from book_authors
+                    authors = self._fetch_authors_using_ids(author_ids=author_ids).fetchall()
             elif fetch_books_payload.authors:
                 # case 2: author name is provided
                 #   1. find author id
                 authors = self._fetch_author_id_from_author_name(author=fetch_books_payload.authors[0]).fetchall()
-                author_id = authors[0].author_id
-                #   2. fetch book ids using author_id from book_authors table
-                book_ids = [record[0] for record in self._fetch_book_ids_from_book_authors_table(author_id=author_id).fetchall()]
-                #   3. fetch book names for the author_ids returned from book_authors
-                books = self._fetch_book_details_from_book_ids(book_ids=book_ids).fetchall()
+                if authors:
+                    author_id = authors[0].author_id
+                    #   2. fetch book ids using author_id from book_authors table
+                    book_ids = [record[0] for record in self._fetch_book_ids_from_book_authors_table(author_id=author_id).fetchall()]
+                    #   3. fetch book names for the author_ids returned from book_authors
+                    books = self._fetch_book_details_from_book_ids(book_ids=book_ids).fetchall()
+            else:
+                # case 3: no author or book details provided
+                # return all the books
+                books = self._fetch_all_books()
+
             
             # build final payload to return (book_id, book_name)(s), (author_id, author_name)(s)
             fetch_books_payload = db_pb2.FetchBooksPayload(
@@ -316,9 +364,32 @@ class DB():
             return None
         return fetch_books_payload
 
+    def update_book(self, book:db_pb2.Book):
+        print(f"DB() update_member called. with book = {book}")
+        try:
+            res = self._execute(qb()._build_update_book_query(book=book))
+            return db_pb2.SuccessMessage(
+                message = "Successfully updated Book details" if res.rowcount else "Book details update failed."
+            )
+        except Exception as e:
+            print(f"DB update_book Exception: {repr(e)}")
+            return db_pb2.SuccessMessage(
+                message = repr(e)
+            )
+
+
     def update_member(self, member: db_pb2.Member):
         print(f"DB() update_member called. with member = {member}")
         try:
+            if member.HasField('mobile_number'):
+                temp_member = db_pb2.Member(
+                    mobile_number = member.mobile_number
+                )
+                res = self.fetch_members(member=temp_member)
+                if res.ListFields():
+                    return db_pb2.SuccessMessage(
+                        message = "Mobile number exists."
+                    )
             res = self._execute(qb()._build_update_member_query(member=member))
             return db_pb2.SuccessMessage(
                 message = "Successfully updated Member details" if res.rowcount else "Member details update failed."
@@ -358,12 +429,20 @@ class DB():
                 for row in rows:
                     ts = Timestamp()
                     ts.FromDatetime(row.issue_date)
+                    issue_date = ts
+                    return_date = None
+                    if row.return_date:
+                        ts = Timestamp()
+                        ts.FromDatetime(row.return_date)
+                        return_date = ts
                     transaction = db_pb2.Transaction(
                                     transaction_id = row.transaction_id,
                                     book_id = row.book_id,
                                     member_id = row.member_id,
                                     issued_branch_id = row.issued_branch_id,
-                                    issue_date = ts
+                                    issue_date = issue_date,
+                                    return_date = return_date,
+                                    fine = row.fine
                                 )
                     transactions.append(transaction)
         except Exception as e:
