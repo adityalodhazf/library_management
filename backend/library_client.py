@@ -186,7 +186,7 @@ def fetch_books(stub):
     else:
         print("fetch_books Invalid input option.")
         return
-    
+
     res = stub.fetch_books(fetch_book_payload)
     print(res)
 

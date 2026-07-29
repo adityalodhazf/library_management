@@ -14,9 +14,9 @@ from google.protobuf.timestamp_pb2 import Timestamp
 
 from dotenv import load_dotenv
 
-BACKEND_DIR = Path(__file__).resolve().parent.parent
-if str(BACKEND_DIR) not in sys.path:
-    sys.path.insert(0, str(BACKEND_DIR))
+# BACKEND_DIR = Path(__file__).resolve().parent.parent
+# if str(BACKEND_DIR) not in sys.path:
+#     sys.path.insert(0, str(BACKEND_DIR))
 
 import db_pb2
 
@@ -142,7 +142,7 @@ class DB():
             print(f"_build_book_record_object Exception: {repr(e)}")
 
     def insert_book(self, book:db_pb2.Book):
-        print("DB() insert_book called")
+        print(f"DB() insert_book called, book = {book}")
         try:
             # insert book
             book_ids = self._execute(qb()._build_insert_book_query(book=book)).scalars().all()
@@ -154,14 +154,12 @@ class DB():
             #         last_name = book.authors.last_name
             #     )
             # )
-            breakpoint()
             # for book in book.books:
             authors.authors.extend(book.authors.authors)
             author_ids = self.insert_authors(authors).scalars().all()
 
             # insert book_authors
             res = self._execute(query=qb()._build_book_authors_query(book_ids, author_ids))
-
             rows = res.fetchall()
             if rows:
                 return "Book added successfully"
@@ -317,6 +315,7 @@ class DB():
                 if books:
                     book_id = books[0].book_id
                     #   2. fetch author ids using book id from book_authors table
+                    records = self._fetch_author_id_from_book_authors_table(book_id=book_id)
                     author_ids = [record[0] for record in self._fetch_author_id_from_book_authors_table(book_id=book_id).fetchall()]
                     #   3. fetch author names for the author_ids returned from book_authors
                     authors = self._fetch_authors_using_ids(author_ids=author_ids).fetchall()
