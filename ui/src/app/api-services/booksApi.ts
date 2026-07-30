@@ -11,7 +11,9 @@ export const getBooks = (
 ): Promise<any> => {
     // console.log("getBooks req_payload = ", req_payload);
     type Payload = {
-        books: string[];
+        books: {
+            title: string;
+        }[];
         authors: Record<string, string>[];
     };
 

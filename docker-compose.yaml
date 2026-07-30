@@ -38,6 +38,23 @@ services:
       timeout: 5s
       retries: 5
 
+  # ui:
+  #   build:
+  #     context: .
+  #     dockerfile: ui/Dockerfile
+
+  #   ports:
+  #     - "3000:3000"
+
+  #   environment:
+  #     GRPC_SERVER: library_server:50051
+
+  #   depends_on:
+  #     - library_server
+
+  #   networks:
+  #     - library_network
+
 volumes:
   postgres_data:
 
